@@ -1,0 +1,14 @@
+[tasks.build]
+run = "go build -o agenda-cli ."
+
+[tasks.test]
+run = "go test ./..."
+
+[tasks.lint]
+run = "golangci-lint run"
+
+[tasks.check]
+run = "filet check"
+
+[tasks.format]
+run = "gofmt -w ."

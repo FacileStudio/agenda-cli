@@ -1,0 +1,29 @@
+builds:
+  - id: "agenda"
+    main: "./main.go"
+    binary: "agenda"
+    goos:
+      - "linux"
+      - "darwin"
+      - "windows"
+    goarch:
+      - "amd64"
+      - "arm64"
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - "-trimpath"
+    ldflags:
+      - "-s"
+      - "-w"
+      - "-X main.version={{.Version}}"
+
+archives:
+  - id: "archive"
+    builds:
+      - "agenda-cli"
+    format: "tar.gz"
+    name_template: "agenda_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: "checksums.txt"

@@ -1,0 +1,8 @@
+# suite defaults
+test:
+  enabled: true
+  commands:
+    - go test ./...
+lint:
+  enabled: true
+  tool: golangci-lint
