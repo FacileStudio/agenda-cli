@@ -20,7 +20,7 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X main.version={{.Version}}
+      - -X github.com/FacileStudio/agenda-cli/cmd.version={{.Version}}
 archives:
   - id: archive
     builds:
