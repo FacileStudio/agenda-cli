@@ -25,7 +25,7 @@ func NewRoot() *cobra.Command {
 		SilenceErrors: false,
 	}
 
-	root.AddCommand(NewAuthCmd())
+	root.AddCommand(newLoginCmd())
 	root.AddCommand(NewCalendarsCmd())
 	root.AddCommand(NewEventsCmd())
 	root.AddCommand(NewCalDAVCmd())

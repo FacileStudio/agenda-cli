@@ -3,8 +3,10 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/FacileStudio/agenda-cli/internal/client"
+	"github.com/FacileStudio/agenda-cli/internal/loopback"
 	"github.com/FacileStudio/agenda-cli/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -14,10 +16,9 @@ func NewAuthCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "auth",
 		Short: "Authentication commands",
-		Long:  "Login, logout, and check authentication status.",
+		Long:  "Logout, and check authentication status.",
 	}
 
-	cmd.AddCommand(newLoginCmd())
 	cmd.AddCommand(newLogoutCmd())
 	cmd.AddCommand(newWhoamiCmd())
 
@@ -26,12 +27,12 @@ func NewAuthCmd() *cobra.Command {
 
 // newLoginCmd returns the login subcommand.
 func newLoginCmd() *cobra.Command {
-	var password string
+	var noBrowser bool
 
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Authenticate with the Agenda server",
-		Long:  "Login using password authentication.",
+		Long:  "Login using device code flow.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			configPath := client.DefaultConfigPath()
 			config := &client.Config{}
@@ -45,11 +46,7 @@ func newLoginCmd() *cobra.Command {
 
 			ui.PrintInfo(fmt.Sprintf("Logging in to %s", config.ServerURL))
 
-			if password == "" {
-				return fmt.Errorf("password required; use --password flag")
-			}
-
-			if err := loginWithPassword(config, password); err != nil {
+			if err := loginWithDeviceCode(config, noBrowser); err != nil {
 				return err
 			}
 
@@ -62,35 +59,78 @@ func newLoginCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&password, "password", "p", "", "Password for authentication")
-	cmd.MarkFlagRequired("password")
+	cmd.Flags().BoolVar(&noBrowser, "no-browser", false, "Do not open browser automatically")
 
 	return cmd
 }
 
-// loginWithPassword authenticates the user with password credentials.
-func loginWithPassword(config *client.Config, password string) error {
+// loginWithDeviceCode authenticates the user using the device code flow.
+func loginWithDeviceCode(config *client.Config, noBrowser bool) error {
 	client := client.NewClient(config)
 
-	resp, err := client.Post("/auth/login", map[string]string{
-		"email":    config.Email,
-		"password": password,
-	})
+	// Get auth config to check if SSO is available
+	authConfig, err := client.AuthConfig()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get auth config: %w", err)
 	}
 
-	var authResp struct {
+	if !authConfig.OIDCEnabled {
+		return fmt.Errorf("server does not support device code login")
+	}
+
+	// Start listener for callback
+	listener, port, err := loopback.Listen()
+	if err != nil {
+		return fmt.Errorf("failed to start listener: %w", err)
+	}
+	defer listener.Close()
+
+	state := loopback.RandomState()
+	authURL := fmt.Sprintf("%s/auth/device?flow=cli&port=%d&cli_state=%s", config.ServerURL, port, state)
+
+	ui.PrintInfo("Opening browser for authentication...")
+	if !noBrowser && !loopback.OpenBrowser(authURL) {
+		ui.PrintWarn("Could not open browser automatically")
+	}
+	ui.PrintInfo(fmt.Sprintf("If browser did not open, visit: %s", authURL))
+	ui.PrintInfo("Waiting for authentication...")
+
+	// Wait for the device code from the callback
+	deviceCode, err := loopback.WaitForCode(listener, state, 5*time.Minute)
+	if err != nil {
+		return fmt.Errorf("authentication failed: %w", err)
+	}
+
+	// Exchange device code for token
+	token, err := client.Exchange(deviceCode)
+	if err != nil {
+		return fmt.Errorf("failed to exchange device code: %w", err)
+	}
+
+	if token == nil || *token == "" {
+		return fmt.Errorf("received empty token from server")
+	}
+
+	config.Token = *token
+
+	// Get user info to populate email and user_id
+	resp, err := client.Get("/me")
+	if err != nil {
+		return fmt.Errorf("failed to get user info: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var meResp struct {
 		UserID string `json:"user_id"`
-		Token  string `json:"token"`
+		Email  string `json:"email"`
 	}
 
-	if err := client.DecodeJSON(resp, &authResp); err != nil {
-		return err
+	if err := client.DecodeJSON(resp, &meResp); err != nil {
+		return fmt.Errorf("failed to decode user info: %w", err)
 	}
 
-	config.UserID = authResp.UserID
-	config.Token = authResp.Token
+	config.UserID = meResp.UserID
+	config.Email = meResp.Email
 
 	return nil
 }
