@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewRoot creates the root command for the agenda CLI.
 func NewRoot() *cobra.Command {
 	var version string
 
@@ -33,8 +34,10 @@ func NewRoot() *cobra.Command {
 	return root
 }
 
+// ErrShowHelp is returned when the user requests help.
+var ErrShowHelp = fmt.Errorf("show help")
+
+// init initializes the UI package.
 func init() {
 	ui.Init()
 }
-
-var ErrShowHelp = fmt.Errorf("show help")

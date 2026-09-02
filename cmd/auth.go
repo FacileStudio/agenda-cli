@@ -2,12 +2,14 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/FacileStudio/agenda-cli/internal/client"
 	"github.com/FacileStudio/agenda-cli/internal/ui"
 	"github.com/spf13/cobra"
 )
 
+// NewAuthCmd returns the auth command group.
 func NewAuthCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "auth",
@@ -22,18 +24,19 @@ func NewAuthCmd() *cobra.Command {
 	return cmd
 }
 
+// newLoginCmd returns the login subcommand.
 func newLoginCmd() *cobra.Command {
 	var password string
 
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Authenticate with the Agenda server",
-		Long:  "Login using password authentication or OIDC SSO if configured.",
+		Long:  "Login using password authentication.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			configPath := client.DefaultConfigPath()
 			config := &client.Config{}
-			if err := config.Read(configPath); err != nil {
-				ui.PrintWarn("No existing config found, creating new one.")
+			if err := config.Read(configPath); err != nil && !os.IsNotExist(err) {
+				return fmt.Errorf("read config: %w", err)
 			}
 
 			if config.ServerURL == "" {
@@ -42,13 +45,12 @@ func newLoginCmd() *cobra.Command {
 
 			ui.PrintInfo(fmt.Sprintf("Logging in to %s", config.ServerURL))
 
-			if password != "" {
-				if err := loginWithPassword(config, password); err != nil {
-					return err
-				}
-			} else {
-				ui.PrintWarn("Password login requires --password flag")
-				return fmt.Errorf("use: agenda login --password <secret>")
+			if password == "" {
+				return fmt.Errorf("password required; use --password flag")
+			}
+
+			if err := loginWithPassword(config, password); err != nil {
+				return err
 			}
 
 			if err := config.Save(configPath); err != nil {
@@ -66,6 +68,7 @@ func newLoginCmd() *cobra.Command {
 	return cmd
 }
 
+// loginWithPassword authenticates the user with password credentials.
 func loginWithPassword(config *client.Config, password string) error {
 	client := client.NewClient(config)
 
@@ -92,6 +95,7 @@ func loginWithPassword(config *client.Config, password string) error {
 	return nil
 }
 
+// newLogoutCmd returns the logout subcommand.
 func newLogoutCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "logout",
@@ -131,6 +135,7 @@ func newLogoutCmd() *cobra.Command {
 	}
 }
 
+// newWhoamiCmd returns the whoami subcommand.
 func newWhoamiCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "whoami",

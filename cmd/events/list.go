@@ -2,7 +2,6 @@ package events
 
 import (
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/FacileStudio/agenda-cli/internal/client"
@@ -10,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// newListCmd returns the list subcommand for events.
 func newListCmd() *cobra.Command {
 	var (
 		calendarID string
@@ -34,43 +34,9 @@ func newListCmd() *cobra.Command {
 			}
 
 			api := client.NewClient(config)
-			path := "/calendars/" + calendarID + "/events"
-
-			params := make(map[string]string)
-			if from != "" {
-				if _, err := time.Parse(time.RFC3339, from); err != nil {
-					params["from"] = from + "T00:00:00Z"
-				} else {
-					params["from"] = from
-				}
-			}
-			if to != "" {
-				if _, err := time.Parse(time.RFC3339, to); err != nil {
-					params["to"] = to + "T23:59:59Z"
-				} else {
-					params["to"] = to
-				}
-			}
-			if search != "" {
-				params["search"] = search
-			}
-
-			req, err := http.NewRequest("GET", config.ServerURL+path, nil)
-			if err != nil {
-				return err
-			}
-
-			q := req.URL.Query()
-			for k, v := range params {
-				q.Set(k, v)
-			}
-			req.URL.RawQuery = q.Encode()
-			req.Header.Set("Accept", "application/json")
-			if config.Token != "" {
-				req.Header.Set("Authorization", config.AuthHeader())
-			}
-
-			resp, err := http.DefaultClient.Do(req)
+		// Build query parameters for filtering
+		params := buildQueryParams(from, to, search)
+		resp, err := api.GetWithQuery("/calendars/"+calendarID+"/events", params)
 			if err != nil {
 				return err
 			}
@@ -101,4 +67,27 @@ func newListCmd() *cobra.Command {
 	cmd.MarkFlagRequired("calendar")
 
 	return cmd
+}
+
+// buildQueryParams builds query parameters for event filtering.
+func buildQueryParams(from, to, search string) map[string]string {
+	params := make(map[string]string)
+	if from != "" {
+		if _, err := time.Parse(time.RFC3339, from); err != nil {
+			params["from"] = from + "T00:00:00Z"
+		} else {
+			params["from"] = from
+		}
+	}
+	if to != "" {
+		if _, err := time.Parse(time.RFC3339, to); err != nil {
+			params["to"] = to + "T23:59:59Z"
+		} else {
+			params["to"] = to
+		}
+	}
+	if search != "" {
+		params["search"] = search
+	}
+	return params
 }

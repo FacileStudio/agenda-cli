@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -29,6 +30,41 @@ func NewClient(config *Config) *Client {
 
 func (c *Client) Get(path string) (*http.Response, error) {
 	return c.doRequest("GET", path, nil)
+}
+
+// GetWithQuery performs a GET request with query parameters.
+func (c *Client) GetWithQuery(path string, params map[string]string) (*http.Response, error) {
+	if err := c.config.Validate(); err != nil {
+		return nil, err
+	}
+
+	u, err := url.Parse(c.config.ServerURL + path)
+	if err != nil {
+		return nil, fmt.Errorf("parse URL: %w", err)
+	}
+
+	q := u.Query()
+	for k, v := range params {
+		q.Set(k, v)
+	}
+	u.RawQuery = q.Encode()
+
+	req, err := http.NewRequestWithContext(context.Background(), "GET", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Accept", "application/json")
+	if c.config.Token != "" {
+		req.Header.Set("Authorization", c.config.AuthHeader())
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+
+	return resp, nil
 }
 
 func (c *Client) Post(path string, body interface{}) (*http.Response, error) {
