@@ -1,8 +1,52 @@
-# suite defaults
-test:
-  enabled: true
-  commands:
-    - go test ./...
-lint:
-  enabled: true
-  tool: golangci-lint
+# agenda-cli's coding standard, enforced by filet.
+# https://github.com/FacileStudio/filet
+#
+#   filet check .     the rules
+#   filet roast .     the rules, with commentary
+#
+# Migrated from the dead `test:`/`lint:` schema (suite-defaults format) to the
+# suite standard: filet's own strict defaults, nothing disabled but line
+# breaking. cmd/ holds one cobra command per file plus main.go; internal/ owns
+# the CalDAV client, the loopback server and the UI.
+
+kind: cli
+
+ignore:
+  - .git
+  - dist
+  - build
+  - vendor
+  - coverage
+
+extensions: [.go]
+
+limits:
+  fileLines: 250        # filet's own default: split the file
+  funcsPerFile: 8
+  funcLines: 30         # filet's own default
+  funcStatements: 25    # filet's own default
+  lineLength: 120       # lll default
+  params: 5
+  returns: 3
+  nesting: 4            # filet's own default
+  complexity: 10        # filet's own default
+  structFields: 12      # filet's own default
+  interfaceMethods: 4   # filet's own default
+
+architecture:
+  requiredDirs: [cmd, internal]
+
+style:
+  banInlineComments: true
+  banTODO: true
+  requireDocComments: true
+  banGlobalMutable: true
+  banInit: true
+  banTrailingSpace: true
+
+disabled:
+  # gofmt owns line breaking; a rule turned off here must be an argument, not
+  # a habit.
+  - gen.line.long
+
+failOn: error
