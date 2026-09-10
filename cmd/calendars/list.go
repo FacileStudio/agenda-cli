@@ -26,7 +26,7 @@ func newListCmd() *cobra.Command {
 				return err
 			}
 
-			var calendars []map[string]interface{}
+			var calendars []map[string]any
 			if err := api.DecodeJSON(resp, &calendars); err != nil {
 				return err
 			}

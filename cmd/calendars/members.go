@@ -29,7 +29,7 @@ func newMembersCmd() *cobra.Command {
 				return err
 			}
 
-			var members []map[string]interface{}
+			var members []map[string]any
 			if err := api.DecodeJSON(resp, &members); err != nil {
 				return err
 			}

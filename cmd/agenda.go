@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/FacileStudio/agenda-cli/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -31,13 +29,7 @@ func NewRoot() *cobra.Command {
 	root.AddCommand(NewCalDAVCmd())
 	root.AddCommand(newConfigCmd())
 
-	return root
-}
-
-// ErrShowHelp is returned when the user requests help.
-var ErrShowHelp = fmt.Errorf("show help")
-
-// init initializes the UI package.
-func init() {
 	ui.Init()
+
+	return root
 }

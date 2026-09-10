@@ -8,17 +8,16 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"time"
-
-	"github.com/FacileStudio/agenda-cli/internal/ui"
 )
 
+// Client is an HTTP client for the Agenda API.
 type Client struct {
 	config     *Config
 	httpClient *http.Client
 }
 
+// NewClient returns a Client bound to the given config.
 func NewClient(config *Config) *Client {
 	return &Client{
 		config: config,
@@ -67,51 +66,11 @@ func (c *Client) GetWithQuery(path string, params map[string]string) (*http.Resp
 	return resp, nil
 }
 
-func (c *Client) Post(path string, body interface{}) (*http.Response, error) {
+func (c *Client) Post(path string, body any) (*http.Response, error) {
 	return c.doRequest("POST", path, body)
 }
 
-// AuthConfig fetches the server's authentication configuration.
-func (c *Client) AuthConfig() (*AuthConfigResponse, error) {
-	resp, err := c.Get("/auth/config")
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var config AuthConfigResponse
-	if err := c.DecodeJSON(resp, &config); err != nil {
-		return nil, err
-	}
-	return &config, nil
-}
-
-// Exchange exchanges a device code for an access token.
-func (c *Client) Exchange(deviceCode string) (*string, error) {
-	resp, err := c.Post("/auth/device/exchange", map[string]string{
-		"device_code": deviceCode,
-	})
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var respStruct struct {
-		Token string `json:"token"`
-	}
-	if err := c.DecodeJSON(resp, &respStruct); err != nil {
-		return nil, err
-	}
-	return &respStruct.Token, nil
-}
-
-// AuthConfigResponse represents the server's auth configuration.
-type AuthConfigResponse struct {
-	SSOOnly    bool `json:"sso_only"`
-	OIDCEnabled bool `json:"oidc_enabled"`
-}
-
-func (c *Client) Put(path string, body interface{}) (*http.Response, error) {
+func (c *Client) Put(path string, body any) (*http.Response, error) {
 	return c.doRequest("PUT", path, body)
 }
 
@@ -119,7 +78,7 @@ func (c *Client) Delete(path string) (*http.Response, error) {
 	return c.doRequest("DELETE", path, nil)
 }
 
-func (c *Client) doRequest(method, path string, body interface{}) (*http.Response, error) {
+func (c *Client) doRequest(method, path string, body any) (*http.Response, error) {
 	if err := c.config.Validate(); err != nil {
 		return nil, err
 	}
@@ -154,7 +113,7 @@ func (c *Client) doRequest(method, path string, body interface{}) (*http.Respons
 	return resp, nil
 }
 
-func (c *Client) DecodeJSON(resp *http.Response, v interface{}) error {
+func (c *Client) DecodeJSON(resp *http.Response, v any) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
@@ -167,13 +126,4 @@ func (c *Client) DecodeJSON(resp *http.Response, v interface{}) error {
 	}
 
 	return nil
-}
-
-func (c *Client) PrintJSON(v interface{}) {
-	data, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		ui.PrintError(err)
-		return
-	}
-	fmt.Fprintln(os.Stdout, string(data))
 }

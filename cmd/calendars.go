@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewCalendarsCmd returns the calendars command group.
 func NewCalendarsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "calendars",

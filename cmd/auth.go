@@ -66,27 +66,39 @@ func newLoginCmd() *cobra.Command {
 
 // loginWithDeviceCode authenticates the user using the device code flow.
 func loginWithDeviceCode(config *client.Config, noBrowser bool) error {
-	client := client.NewClient(config)
+	api := client.NewClient(config)
 
-	// Get auth config to check if SSO is available
-	authConfig, err := client.AuthConfig()
+	authConfig, err := api.AuthConfig()
 	if err != nil {
 		return fmt.Errorf("failed to get auth config: %w", err)
 	}
-
 	if !authConfig.OIDCEnabled {
 		return fmt.Errorf("server does not support device code login")
 	}
 
-	// Start listener for callback
+	deviceCode, err := obtainDeviceCode(config.ServerURL, noBrowser)
+	if err != nil {
+		return err
+	}
+
+	token, err := exchangeToken(api, deviceCode)
+	if err != nil {
+		return err
+	}
+
+	config.Token = *token
+	return populateUser(api, config)
+}
+
+func obtainDeviceCode(serverURL string, noBrowser bool) (string, error) {
 	listener, port, err := loopback.Listen()
 	if err != nil {
-		return fmt.Errorf("failed to start listener: %w", err)
+		return "", fmt.Errorf("failed to start listener: %w", err)
 	}
 	defer listener.Close()
 
 	state := loopback.RandomState()
-	authURL := fmt.Sprintf("%s/auth/device?flow=cli&port=%d&cli_state=%s", config.ServerURL, port, state)
+	authURL := fmt.Sprintf("%s/auth/device?flow=cli&port=%d&cli_state=%s", serverURL, port, state)
 
 	ui.PrintInfo("Opening browser for authentication...")
 	if !noBrowser && !loopback.OpenBrowser(authURL) {
@@ -95,26 +107,26 @@ func loginWithDeviceCode(config *client.Config, noBrowser bool) error {
 	ui.PrintInfo(fmt.Sprintf("If browser did not open, visit: %s", authURL))
 	ui.PrintInfo("Waiting for authentication...")
 
-	// Wait for the device code from the callback
 	deviceCode, err := loopback.WaitForCode(listener, state, 5*time.Minute)
 	if err != nil {
-		return fmt.Errorf("authentication failed: %w", err)
+		return "", fmt.Errorf("authentication failed: %w", err)
 	}
+	return deviceCode, nil
+}
 
-	// Exchange device code for token
-	token, err := client.Exchange(deviceCode)
+func exchangeToken(api *client.Client, deviceCode string) (*string, error) {
+	token, err := api.Exchange(deviceCode)
 	if err != nil {
-		return fmt.Errorf("failed to exchange device code: %w", err)
+		return nil, fmt.Errorf("failed to exchange device code: %w", err)
 	}
-
 	if token == nil || *token == "" {
-		return fmt.Errorf("received empty token from server")
+		return nil, fmt.Errorf("received empty token from server")
 	}
+	return token, nil
+}
 
-	config.Token = *token
-
-	// Get user info to populate email and user_id
-	resp, err := client.Get("/me")
+func populateUser(api *client.Client, config *client.Config) error {
+	resp, err := api.Get("/me")
 	if err != nil {
 		return fmt.Errorf("failed to get user info: %w", err)
 	}
@@ -125,7 +137,7 @@ func loginWithDeviceCode(config *client.Config, noBrowser bool) error {
 		Email  string `json:"email"`
 	}
 
-	if err := client.DecodeJSON(resp, &meResp); err != nil {
+	if err := api.DecodeJSON(resp, &meResp); err != nil {
 		return fmt.Errorf("failed to decode user info: %w", err)
 	}
 

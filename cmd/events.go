@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewEventsCmd returns the events command group.
 func NewEventsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "events",

@@ -8,6 +8,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Config is the client's persisted configuration.
 type Config struct {
 	ServerURL string `yaml:"server_url"`
 	Token     string `yaml:"token"`
@@ -37,6 +38,7 @@ func (c *Config) Read(path string) error {
 	return yaml.Unmarshal(data, c)
 }
 
+// DefaultConfigPath returns the config file path under the user's config dir.
 func DefaultConfigPath() string {
 	if xdg := os.Getenv("XDG_CONFIG_HOME"); xdg != "" {
 		return filepath.Join(xdg, "agenda", "config.yml")

@@ -29,7 +29,7 @@ func newShowCmd() *cobra.Command {
 				return err
 			}
 
-			var calendar map[string]interface{}
+			var calendar map[string]any
 			if err := api.DecodeJSON(resp, &calendar); err != nil {
 				return err
 			}

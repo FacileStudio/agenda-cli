@@ -9,6 +9,7 @@ import (
 	"github.com/emersion/go-ical"
 )
 
+// Event is a calendar event in a format-neutral representation.
 type Event struct {
 	UID         string
 	Summary     string
@@ -21,6 +22,7 @@ type Event struct {
 	UpdatedAt   time.Time
 }
 
+// RenderICS serializes an event into an iCalendar (RFC 5545) payload.
 func RenderICS(event *Event) (string, error) {
 	cal := ical.NewCalendar()
 	cal.Props.SetText(ical.PropVersion, "2.0")
@@ -60,6 +62,7 @@ func RenderICS(event *Event) (string, error) {
 	return buf.String(), nil
 }
 
+// ParseICS decodes an iCalendar payload into events.
 func ParseICS(data string) ([]*Event, error) {
 	dec := ical.NewDecoder(strings.NewReader(data))
 	cal, err := dec.Decode()
@@ -72,24 +75,20 @@ func ParseICS(data string) ([]*Event, error) {
 		if child.Name != ical.CompEvent {
 			continue
 		}
-
-		event := &Event{}
-
-		if uid := child.Props.Get(ical.PropUID); uid != nil {
-			event.UID = uid.Value
-		}
-		if summary := child.Props.Get(ical.PropSummary); summary != nil {
-			event.Summary = summary.Value
-		}
-		if desc := child.Props.Get(ical.PropDescription); desc != nil {
-			event.Description = desc.Value
-		}
-		if loc := child.Props.Get(ical.PropLocation); loc != nil {
-			event.Location = loc.Value
-		}
-
-		events = append(events, event)
+		events = append(events, &Event{
+			UID:         textProp(child, ical.PropUID),
+			Summary:     textProp(child, ical.PropSummary),
+			Description: textProp(child, ical.PropDescription),
+			Location:    textProp(child, ical.PropLocation),
+		})
 	}
 
 	return events, nil
+}
+
+func textProp(comp *ical.Component, name string) string {
+	if p := comp.Props.Get(name); p != nil {
+		return p.Value
+	}
+	return ""
 }

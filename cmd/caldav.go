@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewCalDAVCmd returns the caldav command group.
 func NewCalDAVCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "caldav",
