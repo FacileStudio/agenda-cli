@@ -6,6 +6,13 @@ All notable changes to agenda-cli are documented here. Format follows
 
 ## [Unreleased]
 
+## [v0.2.1] - 2026-09-10
+
+### Fixed
+
+- `--version` now prints the suite-standard `<bin> <semver>` form (`agenda 0.2.1`)
+  instead of cobra's default `agenda version 0.2.1`.
+
 ## [v0.2.0] - 2026-09-10
 
 ### Changed

@@ -22,6 +22,7 @@ func NewRoot() *cobra.Command {
 		SilenceUsage:  true,
 		SilenceErrors: false,
 	}
+	root.SetVersionTemplate("{{.Name}} {{.Version}}\n")
 
 	root.AddCommand(newLoginCmd())
 	root.AddCommand(NewCalendarsCmd())
