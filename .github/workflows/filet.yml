@@ -18,6 +18,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - name: install gopls
+        # The LSP tier resolves gopls via PATH or the mason install dir; the
+        # runner has neither, so install it explicitly or the absent-server
+        # finding trips the fail-on: info gate.
+        run: |
+          GOBIN="${RUNNER_TEMP}/tools" go install golang.org/x/tools/gopls@latest
+          echo "${RUNNER_TEMP}/tools" >> "$GITHUB_PATH"
       - uses: FacileStudio/filet@v0
         with:
           version: v0
