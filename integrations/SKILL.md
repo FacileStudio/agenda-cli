@@ -35,23 +35,23 @@ agenda token revoke [--json]             Revoke personal API token (alias: delet
 
 ### Calendars
 ```
-agenda calendars list [--json]                                List all calendars
-agenda calendars create <name> [--color <hex>]                Create a calendar
-agenda calendars show <id> [--json]                           Show calendar details
-agenda calendars update <id> [--name <name>] [--color <hex>]  Update calendar
-agenda calendars delete <id>                                 Delete calendar
-agenda calendars members <id>                                List calendar members
-agenda calendars share <id> <email> [--role <role>]          Share calendar
-agenda calendars unshare <id> <email>                        Remove user from calendar
+agenda calendars list [--json]                                       List all calendars
+agenda calendars create <name> [--color <hex>] [--json]              Create a calendar
+agenda calendars show <id> [--json]                                  Show calendar details
+agenda calendars update <id> [--name <name>] [--color <hex>] [--json] Update calendar
+agenda calendars delete <id> [-f] [--json]                           Delete calendar
+agenda calendars members <id> [--json]                               List calendar members
+agenda calendars share <id> <email> <role> [--json]                  Share calendar
+agenda calendars unshare <id> <email-or-id> [--json]                 Remove member from calendar
 ```
 
 ### Events
 ```
 agenda events list --calendar <id> [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--search <q>] [--json]
 agenda events show <id> [--ics] [--json]
-agenda events create --calendar <id> --title <title> --start <RFC3339> --end <RFC3339>
-agenda events update <calendar-id> <event-id> [--title <title>] [--start <RFC3339>] [--end <RFC3339>]
-agenda events delete <calendar-id> <event-id>
+agenda events create --calendar <id> --title <title> --start <datetime> --end <datetime> [--all-day] [--location <loc>] [--description <desc>] [--json]
+agenda events update <id> [--title <title>] [--start <datetime>] [--end <datetime>] [--calendar <id>] [--all-day] [--location <loc>] [--description <desc>] [--json]
+agenda events delete <id> [-f] [--json]
 ```
 
 ### CalDAV
