@@ -9,7 +9,3 @@ func loadAPI() (*client.Client, error) {
 	return client.LoadAPI()
 }
 
-// loadConfig reads the configuration.
-func loadConfig() (*client.Config, error) {
-	return client.Load()
-}
