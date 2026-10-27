@@ -52,8 +52,9 @@ func DefaultConfigPath() string {
 
 func (c *Config) Validate() error {
 	if c.ServerURL == "" {
-		return fmt.Errorf("no server URL configured; run `agenda config server <url>` or set AGENDA_SERVER_URL")
+		c.ServerURL = DefaultServerURL
 	}
+	c.ServerURL = NormalizeServerURL(c.ServerURL)
 	return nil
 }
 

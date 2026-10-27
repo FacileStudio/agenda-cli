@@ -2,7 +2,24 @@ package client
 
 import (
 	"os"
+	"strings"
 )
+
+// DefaultServerURL is the default Agenda API endpoint.
+const DefaultServerURL = "https://agenda.facile.studio/api"
+
+// NormalizeServerURL normalizes server URLs, ensuring default Agenda host points to /api.
+func NormalizeServerURL(raw string) string {
+	raw = strings.TrimSpace(raw)
+	raw = strings.TrimRight(raw, "/")
+	if raw == "" {
+		return DefaultServerURL
+	}
+	if raw == "https://agenda.facile.studio" || raw == "http://agenda.facile.studio" {
+		return DefaultServerURL
+	}
+	return raw
+}
 
 // Load loads configuration from disk and environment variables.
 func Load() (*Config, error) {
@@ -19,6 +36,12 @@ func Load() (*Config, error) {
 	}
 	if envToken := os.Getenv("AGENDA_TOKEN"); envToken != "" {
 		config.Token = envToken
+	}
+
+	if config.ServerURL == "" {
+		config.ServerURL = DefaultServerURL
+	} else {
+		config.ServerURL = NormalizeServerURL(config.ServerURL)
 	}
 
 	return config, nil

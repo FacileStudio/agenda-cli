@@ -76,6 +76,13 @@ func runWhoami(jsonOutput bool) error {
 		return nil
 	}
 
+	if config.UserID == "" || config.Email == "" {
+		api := client.NewClient(config)
+		if err := populateUser(api, config); err != nil {
+			return err
+		}
+	}
+
 	if jsonOutput {
 		return ui.PrintJSON(map[string]string{
 			"user_id":    config.UserID,

@@ -6,6 +6,14 @@ All notable changes to agenda-cli are documented here. Format follows
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-27
+
+### Fixed
+
+- Default server URL to `https://agenda.facile.studio/api` so running with `AGENDA_TOKEN` requires no extra URL configuration.
+- Automatically resolve caller profile from `/users/me` on `agenda whoami` when authenticated via environment variable or token without local config.
+- Normalize server URLs pointing to `agenda.facile.studio` to append `/api`.
+
 ## [0.3.0] - 2026-10-27
 
 ### Added

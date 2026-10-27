@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var version = "0.3.0"
+var version = "0.3.1"
 
 // NewRoot creates the root command for the agenda CLI.
 func NewRoot() *cobra.Command {
