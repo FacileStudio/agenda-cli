@@ -8,7 +8,10 @@ import (
 )
 
 func newDeleteCmd() *cobra.Command {
-	var force bool
+	var (
+		force      bool
+		jsonOutput bool
+	)
 
 	cmd := &cobra.Command{
 		Use:   "delete <id>",
@@ -16,16 +19,17 @@ func newDeleteCmd() *cobra.Command {
 		Long:  "Delete a calendar by ID. Requires write access.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runDelete(args[0], force)
+			return runDelete(args[0], force, jsonOutput)
 		},
 	}
 
 	cmd.Flags().BoolVarP(&force, "force", "f", false, "Skip confirmation")
+	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Output in JSON format")
 
 	return cmd
 }
 
-func runDelete(id string, force bool) error {
+func runDelete(id string, force, jsonOutput bool) error {
 	if !force && !confirm("This will permanently delete the calendar. Continue? [y/N] ") {
 		return nil
 	}
@@ -41,6 +45,10 @@ func runDelete(id string, force bool) error {
 	}
 
 	resp.Body.Close()
+
+	if jsonOutput {
+		return ui.PrintJSON(map[string]bool{"deleted": true})
+	}
 
 	ui.PrintSuccess("Calendar deleted")
 	return nil

@@ -9,8 +9,9 @@ import (
 
 func newUpdateCmd() *cobra.Command {
 	var (
-		name  string
-		color string
+		name       string
+		color      string
+		jsonOutput bool
 	)
 
 	cmd := &cobra.Command{
@@ -19,17 +20,18 @@ func newUpdateCmd() *cobra.Command {
 		Long:  "Update a calendar's name or color.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runUpdate(args[0], name, color)
+			return runUpdate(args[0], name, color, jsonOutput)
 		},
 	}
 
 	cmd.Flags().StringVar(&name, "name", "", "New calendar name")
 	cmd.Flags().StringVar(&color, "color", "", "New calendar color")
+	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Output in JSON format")
 
 	return cmd
 }
 
-func runUpdate(id, name, color string) error {
+func runUpdate(id, name, color string, jsonOutput bool) error {
 	api, err := loadAPI()
 	if err != nil {
 		return err
@@ -55,6 +57,10 @@ func runUpdate(id, name, color string) error {
 	var calendar map[string]any
 	if err := api.DecodeJSON(resp, &calendar); err != nil {
 		return err
+	}
+
+	if jsonOutput {
+		return ui.PrintJSON(calendar)
 	}
 
 	ui.PrintSuccess("Calendar updated")

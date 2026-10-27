@@ -6,6 +6,19 @@ All notable changes to agenda-cli are documented here. Format follows
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-10-27
+
+### Added
+
+- Added `--json` flag to `calendars create`, `update`, `delete`, `members`, `share`, `unshare`, and `events create`, `update`, `delete`.
+- Flexible datetime parsing for `events create` and `update` supporting ISO 8601, RFC 3339, and `YYYY-MM-DD HH:MM`.
+- Member resolution in `calendars unshare` accepting both email addresses and integer member IDs.
+
+### Fixed
+
+- Fixed event creation and update payload fields to match Agenda API contract (`start_at`, `end_at`, `is_all_day` instead of `start`, `end`, `all_day`).
+- Preserved existing event fields during partial updates (`events update`) to avoid overwriting unchanged values.
+
 ## [0.3.1] - 2026-10-27
 
 ### Fixed

@@ -8,7 +8,10 @@ import (
 )
 
 func newCreateCmd() *cobra.Command {
-	var color string
+	var (
+		color      string
+		jsonOutput bool
+	)
 
 	cmd := &cobra.Command{
 		Use:   "create <name>",
@@ -16,16 +19,17 @@ func newCreateCmd() *cobra.Command {
 		Long:  "Create a new calendar with the given name and optional color.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCreate(args[0], color)
+			return runCreate(args[0], color, jsonOutput)
 		},
 	}
 
 	cmd.Flags().StringVar(&color, "color", "", "Calendar color (hex or name)")
+	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Output in JSON format")
 
 	return cmd
 }
 
-func runCreate(name, color string) error {
+func runCreate(name, color string, jsonOutput bool) error {
 	api, err := loadAPI()
 	if err != nil {
 		return err
@@ -44,6 +48,10 @@ func runCreate(name, color string) error {
 	var calendar map[string]any
 	if err := api.DecodeJSON(resp, &calendar); err != nil {
 		return err
+	}
+
+	if jsonOutput {
+		return ui.PrintJSON(calendar)
 	}
 
 	ui.PrintSuccess("Calendar created")
