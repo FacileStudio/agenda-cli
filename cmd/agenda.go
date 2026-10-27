@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var version string
+var version = "0.3.0"
 
 // NewRoot creates the root command for the agenda CLI.
 func NewRoot() *cobra.Command {
@@ -31,6 +31,7 @@ func NewRoot() *cobra.Command {
 	root.AddCommand(NewCalendarsCmd())
 	root.AddCommand(NewEventsCmd())
 	root.AddCommand(NewCalDAVCmd())
+	root.AddCommand(NewTokenCmd())
 	root.AddCommand(newConfigCmd())
 
 	ui.Init()

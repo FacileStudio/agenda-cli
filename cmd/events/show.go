@@ -10,7 +10,10 @@ import (
 )
 
 func newShowCmd() *cobra.Command {
-	var ics bool
+	var (
+		ics        bool
+		jsonOutput bool
+	)
 
 	cmd := &cobra.Command{
 		Use:   "show <id>",
@@ -18,16 +21,17 @@ func newShowCmd() *cobra.Command {
 		Long:  "Show details for a specific event by ID.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runShow(args[0], ics)
+			return runShow(args[0], ics, jsonOutput)
 		},
 	}
 
 	cmd.Flags().BoolVar(&ics, "ics", false, "Output as ICS format")
+	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Output in JSON format")
 
 	return cmd
 }
 
-func runShow(id string, ics bool) error {
+func runShow(id string, ics, jsonOutput bool) error {
 	api, err := loadAPI()
 	if err != nil {
 		return err
@@ -41,6 +45,10 @@ func runShow(id string, ics bool) error {
 	var event map[string]any
 	if err := api.DecodeJSON(resp, &event); err != nil {
 		return err
+	}
+
+	if jsonOutput {
+		return ui.PrintJSON(event)
 	}
 
 	if ics {

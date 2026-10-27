@@ -8,35 +8,39 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type listFilter struct {
+	calendarID string
+	from       string
+	to         string
+	search     string
+	jsonOutput bool
+}
+
 func newListCmd() *cobra.Command {
-	var (
-		calendarID string
-		from       string
-		to         string
-		search     string
-	)
+	var filter listFilter
 
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List events",
 		Long:  "List events in a calendar, optionally filtered by date range or search text.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runList(calendarID, from, to, search)
+			return runList(filter)
 		},
 	}
 
-	cmd.Flags().StringVar(&calendarID, "calendar", "", "Calendar ID")
-	cmd.Flags().StringVar(&from, "from", "", "Start date (YYYY-MM-DD)")
-	cmd.Flags().StringVar(&to, "to", "", "End date (YYYY-MM-DD)")
-	cmd.Flags().StringVar(&search, "search", "", "Search text in title/description")
+	cmd.Flags().StringVar(&filter.calendarID, "calendar", "", "Calendar ID")
+	cmd.Flags().StringVar(&filter.from, "from", "", "Start date (YYYY-MM-DD)")
+	cmd.Flags().StringVar(&filter.to, "to", "", "End date (YYYY-MM-DD)")
+	cmd.Flags().StringVar(&filter.search, "search", "", "Search text in title/description")
+	cmd.Flags().BoolVar(&filter.jsonOutput, "json", false, "Output in JSON format")
 
 	cmd.MarkFlagRequired("calendar")
 
 	return cmd
 }
 
-func runList(calendarID, from, to, search string) error {
-	if calendarID == "" {
+func runList(filter listFilter) error {
+	if filter.calendarID == "" {
 		return fmt.Errorf("--calendar is required")
 	}
 
@@ -45,8 +49,8 @@ func runList(calendarID, from, to, search string) error {
 		return err
 	}
 
-	params := buildQueryParams(from, to, search)
-	resp, err := api.GetWithQuery("/calendars/"+calendarID+"/events", params)
+	params := buildQueryParams(filter.from, filter.to, filter.search)
+	resp, err := api.GetWithQuery("/calendars/"+filter.calendarID+"/events", params)
 	if err != nil {
 		return err
 	}
@@ -56,6 +60,18 @@ func runList(calendarID, from, to, search string) error {
 		return err
 	}
 
+	if filter.jsonOutput {
+		if events == nil {
+			events = []map[string]any{}
+		}
+		return ui.PrintJSON(events)
+	}
+
+	printEvents(events)
+	return nil
+}
+
+func printEvents(events []map[string]any) {
 	ui.PrintSuccess(fmt.Sprintf("Found %d events", len(events)))
 	for _, event := range events {
 		ui.PrintKeyValue("ID", fmt.Sprintf("%v", event["id"]))
@@ -64,8 +80,6 @@ func runList(calendarID, from, to, search string) error {
 		ui.PrintKeyValue("End", fmt.Sprintf("%v", event["end"]))
 		fmt.Println()
 	}
-
-	return nil
 }
 
 func buildQueryParams(from, to, search string) map[string]string {

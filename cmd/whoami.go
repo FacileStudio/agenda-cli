@@ -46,26 +46,47 @@ func newLogoutCmd() *cobra.Command {
 }
 
 func newWhoamiCmd() *cobra.Command {
-	return &cobra.Command{
+	var jsonOutput bool
+
+	cmd := &cobra.Command{
 		Use:   "whoami",
 		Short: "Show the current authenticated user",
 		Long:  "Display the user_id and email from the stored config.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config, err := client.Load()
-			if err != nil {
-				return err
-			}
-
-			if !config.IsAuthenticated() {
-				ui.PrintWarn("Not logged in")
-				return nil
-			}
-
-			ui.PrintKeyValue("User ID", config.UserID)
-			ui.PrintKeyValue("Email", config.Email)
-			ui.PrintKeyValue("Server", config.ServerURL)
-
-			return nil
+			return runWhoami(jsonOutput)
 		},
 	}
+
+	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Output in JSON format")
+
+	return cmd
+}
+
+func runWhoami(jsonOutput bool) error {
+	config, err := client.Load()
+	if err != nil {
+		return err
+	}
+
+	if !config.IsAuthenticated() {
+		if jsonOutput {
+			return fmt.Errorf("not logged in")
+		}
+		ui.PrintWarn("Not logged in")
+		return nil
+	}
+
+	if jsonOutput {
+		return ui.PrintJSON(map[string]string{
+			"user_id":    config.UserID,
+			"email":      config.Email,
+			"server_url": config.ServerURL,
+		})
+	}
+
+	ui.PrintKeyValue("User ID", config.UserID)
+	ui.PrintKeyValue("Email", config.Email)
+	ui.PrintKeyValue("Server", config.ServerURL)
+
+	return nil
 }

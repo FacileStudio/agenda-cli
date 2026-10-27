@@ -17,17 +17,24 @@ curl -fsSL https://github.com/FacileStudio/agenda-cli/releases/latest/download/i
 ```bash
 agenda config server https://agenda.example.com
 agenda login
-agenda calendars list
+agenda whoami --json
+agenda calendars list --json
 agenda events create --calendar <id> --title "Meeting" --start 2026-09-02T14:00:00Z --end 2026-09-02T15:00:00Z
+agenda token status
 agenda caldav url
 ```
 
 ## Commands
 
+- `login`, `logout`, `whoami [--json]`
 - `auth login`, `auth logout`, `auth whoami`
-- `calendars list`, `create`, `show`, `update`, `delete`, `share`, `members`, `unshare`
-- `events list`, `show`, `create`, `update`, `delete`
+- `token status [--json]`, `token create [-n <name>] [--json]`, `token revoke [--json]` (alias `delete`)
+- `calendars list [--json]`, `create`, `show <id> [--json]`, `update`, `delete`, `share`, `members`, `unshare`
+- `events list --calendar <id> [...] [--json]`, `show <id> [--ics] [--json]`, `create`, `update`, `delete`
 - `caldav url`, `caldav sync-token <calendar>`, `caldav test`
+- `config server <url>`, `config get`
+
+Use `--json` on supported commands for machine-readable output without decorative styling.
 
 ## Config
 

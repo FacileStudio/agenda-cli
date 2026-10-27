@@ -6,6 +6,21 @@ All notable changes to agenda-cli are documented here. Format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-27
+
+### Added
+
+- `--json` flags across commands (`whoami`, `calendars list`, `calendars show`, `events list`, `events show`, and `token` commands) for raw JSON output.
+- `agenda token` command group (`status`, `create`, `revoke`/`delete`) for personal API token management matching Agenda server endpoints.
+- Comprehensive unit tests covering token commands, json formatting, whoami, calendars, and events.
+
+### Fixed
+
+- OIDC flow endpoint correction.
+- User profile path `/users/me`.
+- Config file missing fallback and `AGENDA_SERVER_URL` / `AGENDA_TOKEN` resolution.
+- `auth`, `whoami`, and `logout` command registration on root command.
+
 ## [v0.2.1] - 2026-09-10
 
 ### Fixed
