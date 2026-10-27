@@ -3,7 +3,6 @@ package calendars
 import (
 	"fmt"
 
-	"github.com/FacileStudio/agenda-cli/internal/client"
 	"github.com/FacileStudio/agenda-cli/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -17,13 +16,11 @@ func newMembersCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			calendarID := args[0]
 
-			configPath := client.DefaultConfigPath()
-			config := &client.Config{}
-			if err := config.Read(configPath); err != nil {
+			api, err := loadAPI()
+			if err != nil {
 				return err
 			}
 
-			api := client.NewClient(config)
 			resp, err := api.Get("/calendars/" + calendarID + "/members")
 			if err != nil {
 				return err

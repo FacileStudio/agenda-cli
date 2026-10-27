@@ -3,7 +3,6 @@ package caldav
 import (
 	"fmt"
 
-	"github.com/FacileStudio/agenda-cli/internal/client"
 	"github.com/FacileStudio/agenda-cli/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -14,9 +13,8 @@ func newURLCmd() *cobra.Command {
 		Short: "Print the CalDAV home set URL",
 		Long:  "Print the CalDAV home set URL for the current user, suitable for pasting into Apple Calendar, iOS, or Thunderbird.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			configPath := client.DefaultConfigPath()
-			config := &client.Config{}
-			if err := config.Read(configPath); err != nil {
+			config, err := loadConfig()
+			if err != nil {
 				return err
 			}
 

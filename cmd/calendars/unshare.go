@@ -1,7 +1,6 @@
 package calendars
 
 import (
-	"github.com/FacileStudio/agenda-cli/internal/client"
 	"github.com/FacileStudio/agenda-cli/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -16,13 +15,11 @@ func newUnshareCmd() *cobra.Command {
 			calendarID := args[0]
 			memberEmail := args[1]
 
-			configPath := client.DefaultConfigPath()
-			config := &client.Config{}
-			if err := config.Read(configPath); err != nil {
+			api, err := loadAPI()
+			if err != nil {
 				return err
 			}
 
-			api := client.NewClient(config)
 			resp, err := api.Delete("/calendars/" + calendarID + "/members/" + memberEmail)
 			if err != nil {
 				return err

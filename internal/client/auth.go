@@ -21,10 +21,10 @@ func (c *Client) AuthConfig() (*AuthConfigResponse, error) {
 	return &config, nil
 }
 
-// Exchange exchanges a device code for an access token.
-func (c *Client) Exchange(deviceCode string) (*string, error) {
-	resp, err := c.Post("/auth/device/exchange", map[string]string{
-		"device_code": deviceCode,
+// Exchange exchanges an authorization code for an access token.
+func (c *Client) Exchange(code string) (*string, error) {
+	resp, err := c.Post("/auth/oidc/exchange", map[string]string{
+		"code": code,
 	})
 	if err != nil {
 		return nil, err

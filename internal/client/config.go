@@ -57,6 +57,17 @@ func (c *Config) Validate() error {
 	return nil
 }
 
+// RequireAuth validates configuration and requires an auth token.
+func (c *Config) RequireAuth() error {
+	if err := c.Validate(); err != nil {
+		return err
+	}
+	if !c.IsAuthenticated() {
+		return fmt.Errorf("not logged in — run `agenda login` or set AGENDA_TOKEN")
+	}
+	return nil
+}
+
 func (c *Config) IsAuthenticated() bool {
 	return c.Token != ""
 }

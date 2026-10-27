@@ -25,6 +25,9 @@ func NewRoot() *cobra.Command {
 	root.SetVersionTemplate("{{.Name}} {{.Version}}\n")
 
 	root.AddCommand(newLoginCmd())
+	root.AddCommand(newLogoutCmd())
+	root.AddCommand(newWhoamiCmd())
+	root.AddCommand(NewAuthCmd())
 	root.AddCommand(NewCalendarsCmd())
 	root.AddCommand(NewEventsCmd())
 	root.AddCommand(NewCalDAVCmd())

@@ -16,7 +16,7 @@ curl -fsSL https://github.com/FacileStudio/agenda-cli/releases/latest/download/i
 
 ```bash
 agenda config server https://agenda.example.com
-agenda login --password <secret>
+agenda login
 agenda calendars list
 agenda events create --calendar <id> --title "Meeting" --start 2026-09-02T14:00:00Z --end 2026-09-02T15:00:00Z
 agenda caldav url
