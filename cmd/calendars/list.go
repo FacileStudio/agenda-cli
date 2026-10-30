@@ -48,9 +48,7 @@ func runList(jsonOutput bool) error {
 
 	ui.PrintSuccess(fmt.Sprintf("Found %d calendars", len(calendars)))
 	for _, cal := range calendars {
-		ui.PrintKeyValue("ID", fmt.Sprintf("%v", cal["id"]))
-		ui.PrintKeyValue("Name", fmt.Sprintf("%v", cal["name"]))
-		ui.PrintKeyValue("Color", fmt.Sprintf("%v", cal["color"]))
+		printCalendar(cal)
 		fmt.Println()
 	}
 

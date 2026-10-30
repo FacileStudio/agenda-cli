@@ -18,6 +18,9 @@ type Event struct {
 	Start       time.Time
 	End         time.Time
 	AllDay      bool
+	Recurrence  string
+	Status      string
+	URL         string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -39,13 +42,8 @@ func RenderICS(event *Event) (string, error) {
 		comp.Props.SetText(ical.PropLocation, event.Location)
 	}
 
-	if event.AllDay {
-		comp.Props.SetDate(ical.PropDateTimeStart, event.Start)
-		comp.Props.SetDate(ical.PropDateTimeEnd, event.End)
-	} else {
-		comp.Props.SetDateTime(ical.PropDateTimeStart, event.Start)
-		comp.Props.SetDateTime(ical.PropDateTimeEnd, event.End)
-	}
+	setExtras(comp, event)
+	setBounds(comp, event)
 
 	comp.Props.SetDateTime(ical.PropDateTimeStamp, time.Now())
 	comp.Props.SetDateTime(ical.PropCreated, event.CreatedAt)
@@ -91,4 +89,26 @@ func textProp(comp *ical.Component, name string) string {
 		return p.Value
 	}
 	return ""
+}
+
+func setExtras(comp *ical.Component, event *Event) {
+	if event.Recurrence != "" {
+		comp.Props.Add(&ical.Prop{Name: ical.PropRecurrenceRule, Value: event.Recurrence})
+	}
+	if event.Status != "" {
+		comp.Props.SetText(ical.PropStatus, strings.ToUpper(event.Status))
+	}
+	if event.URL != "" {
+		comp.Props.Add(&ical.Prop{Name: ical.PropURL, Value: event.URL})
+	}
+}
+
+func setBounds(comp *ical.Component, event *Event) {
+	if event.AllDay {
+		comp.Props.SetDate(ical.PropDateTimeStart, event.Start)
+		comp.Props.SetDate(ical.PropDateTimeEnd, event.End)
+		return
+	}
+	comp.Props.SetDateTime(ical.PropDateTimeStart, event.Start)
+	comp.Props.SetDateTime(ical.PropDateTimeEnd, event.End)
 }

@@ -9,35 +9,44 @@ import (
 
 func newCreateCmd() *cobra.Command {
 	var (
-		color      string
+		fields     calendarFields
+		spaceID    int64
 		jsonOutput bool
 	)
 
 	cmd := &cobra.Command{
-		Use:   "create <name>",
+		Use:   "create [name]",
 		Short: "Create a new calendar",
-		Long:  "Create a new calendar with the given name and optional color.",
-		Args:  cobra.ExactArgs(1),
+		Long:  "Create a new calendar. The name is the argument or --name.",
+		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCreate(args[0], color, jsonOutput)
+			if len(args) == 1 {
+				cmd.Flags().Set("name", args[0])
+			}
+			return runCreate(cmd, &fields, spaceID, jsonOutput)
 		},
 	}
 
-	cmd.Flags().StringVar(&color, "color", "", "Calendar color (hex or name)")
+	fields.bind(cmd)
+	cmd.Flags().Int64Var(&spaceID, "space", 0, "Scope the calendar to this space id")
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Output in JSON format")
 
 	return cmd
 }
 
-func runCreate(name, color string, jsonOutput bool) error {
+func runCreate(cmd *cobra.Command, fields *calendarFields, spaceID int64, jsonOutput bool) error {
+	body := map[string]any{}
+	fields.overlay(cmd, body)
+	if _, ok := body["name"]; !ok {
+		return fmt.Errorf("a calendar needs a name: pass it as the argument or with --name")
+	}
+	if spaceID != 0 {
+		body["space_id"] = spaceID
+	}
+
 	api, err := loadAPI()
 	if err != nil {
 		return err
-	}
-
-	body := map[string]any{"name": name}
-	if color != "" {
-		body["color"] = color
 	}
 
 	resp, err := api.Post("/calendars", body)
@@ -55,9 +64,17 @@ func runCreate(name, color string, jsonOutput bool) error {
 	}
 
 	ui.PrintSuccess("Calendar created")
-	ui.PrintKeyValue("ID", fmt.Sprintf("%v", calendar["id"]))
-	ui.PrintKeyValue("Name", fmt.Sprintf("%v", calendar["name"]))
-	ui.PrintKeyValue("Color", fmt.Sprintf("%v", calendar["color"]))
-
+	printCalendar(calendar)
 	return nil
+}
+
+func printCalendar(calendar map[string]any) {
+	for _, row := range [][2]string{
+		{"ID", "id"}, {"Name", "name"}, {"Color", "color"}, {"Description", "description"},
+		{"Echo URL", "echo_url"}, {"Role", "role"}, {"Owner", "owner_id"},
+	} {
+		if v, ok := calendar[row[1]]; ok && v != nil {
+			ui.PrintKeyValue(row[0], fmt.Sprintf("%v", v))
+		}
+	}
 }

@@ -44,7 +44,9 @@ func runDelete(id string, force, jsonOutput bool) error {
 		return err
 	}
 
-	resp.Body.Close()
+	if err := api.ExpectOK(resp); err != nil {
+		return err
+	}
 
 	if jsonOutput {
 		return ui.PrintJSON(map[string]bool{"deleted": true})

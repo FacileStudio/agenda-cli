@@ -66,13 +66,18 @@ func runShow(id string, ics, jsonOutput bool) error {
 
 func renderICS(event map[string]any) (string, error) {
 	calEvent := &caldav.Event{
-		UID:         fmt.Sprintf("%v", event["id"]),
-		Summary:     fmt.Sprintf("%v", event["title"]),
-		Description: fmt.Sprintf("%v", event["description"]),
-		Location:    fmt.Sprintf("%v", event["location"]),
-		AllDay:      fmt.Sprintf("%v", event["all_day"]) == "true",
-		Start:       parseTime(event["start"]),
-		End:         parseTime(event["end"]),
+		UID:         firstText(event["uid"], event["id"]),
+		Summary:     text(event["title"]),
+		Description: text(event["description"]),
+		Location:    text(event["location"]),
+		AllDay:      text(event["is_all_day"]) == "true",
+		Start:       parseTime(event["start_at"]),
+		End:         parseTime(event["end_at"]),
+		Recurrence:  text(event["recurrence_rule"]),
+		Status:      text(event["status"]),
+		URL:         text(event["conference_url"]),
+		CreatedAt:   parseTime(event["created_at"]),
+		UpdatedAt:   parseTime(event["updated_at"]),
 	}
 	return caldav.RenderICS(calEvent)
 }
@@ -86,13 +91,11 @@ func parseTime(v any) time.Time {
 	return time.Time{}
 }
 
-func printEvent(event map[string]any) {
-	ui.PrintKeyValue("ID", fmt.Sprintf("%v", event["id"]))
-	ui.PrintKeyValue("Title", fmt.Sprintf("%v", event["title"]))
-	ui.PrintKeyValue("Start", fmt.Sprintf("%v", event["start"]))
-	ui.PrintKeyValue("End", fmt.Sprintf("%v", event["end"]))
-	ui.PrintKeyValue("All Day", fmt.Sprintf("%v", event["all_day"]))
-	ui.PrintKeyValue("Location", fmt.Sprintf("%v", event["location"]))
-	ui.PrintKeyValue("Description", fmt.Sprintf("%v", event["description"]))
-	ui.PrintKeyValue("Calendar", fmt.Sprintf("%v", event["calendar_id"]))
+func firstText(values ...any) string {
+	for _, v := range values {
+		if s := text(v); s != "" {
+			return s
+		}
+	}
+	return ""
 }

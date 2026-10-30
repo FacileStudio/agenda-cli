@@ -5,7 +5,7 @@ import (
 )
 
 func TestBuildQueryParams(t *testing.T) {
-	params := buildQueryParams("2026-10-27", "2026-10-28", "standup")
+	params := buildQueryParams("2026-10-27", "2026-10-28", "Europe/Paris")
 
 	if params["from"] != "2026-10-27T00:00:00Z" {
 		t.Errorf("expected from 2026-10-27T00:00:00Z, got %s", params["from"])
@@ -13,8 +13,8 @@ func TestBuildQueryParams(t *testing.T) {
 	if params["to"] != "2026-10-28T23:59:59Z" {
 		t.Errorf("expected to 2026-10-28T23:59:59Z, got %s", params["to"])
 	}
-	if params["search"] != "standup" {
-		t.Errorf("expected search standup, got %s", params["search"])
+	if params["tz"] != "Europe/Paris" {
+		t.Errorf("expected tz Europe/Paris, got %s", params["tz"])
 	}
 
 	rfcParams := buildQueryParams("2026-10-27T12:00:00Z", "2026-10-28T18:00:00Z", "")

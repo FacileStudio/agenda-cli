@@ -60,46 +60,6 @@ func TestCalendarsShow(t *testing.T) {
 	}
 }
 
-func TestCalendarsCreate(t *testing.T) {
-	setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/calendars" || r.Method != http.MethodPost {
-			t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
-		}
-		json.NewEncoder(w).Encode(map[string]any{
-			"id":    "cal-2",
-			"name":  "Project",
-			"color": "#00ff00",
-		})
-	})
-
-	if err := runCreate("Project", "#00ff00", true); err != nil {
-		t.Fatalf("runCreate json failed: %v", err)
-	}
-	if err := runCreate("Project", "#00ff00", false); err != nil {
-		t.Fatalf("runCreate human failed: %v", err)
-	}
-}
-
-func TestCalendarsUpdate(t *testing.T) {
-	setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/calendars/cal-2" || r.Method != http.MethodPut {
-			t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
-		}
-		json.NewEncoder(w).Encode(map[string]any{
-			"id":    "cal-2",
-			"name":  "Renamed",
-			"color": "#0000ff",
-		})
-	})
-
-	if err := runUpdate("cal-2", "Renamed", "#0000ff", true); err != nil {
-		t.Fatalf("runUpdate json failed: %v", err)
-	}
-	if err := runUpdate("cal-2", "Renamed", "#0000ff", false); err != nil {
-		t.Fatalf("runUpdate human failed: %v", err)
-	}
-}
-
 func TestCalendarsDelete(t *testing.T) {
 	setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/calendars/cal-2" || r.Method != http.MethodDelete {
@@ -113,5 +73,51 @@ func TestCalendarsDelete(t *testing.T) {
 	}
 	if err := runDelete("cal-2", true, false); err != nil {
 		t.Fatalf("runDelete human failed: %v", err)
+	}
+}
+
+func TestCalendarsUpdateMergesStoredFields(t *testing.T) {
+	var got map[string]any
+	setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			json.NewEncoder(w).Encode(map[string]any{
+				"id": 1, "name": "Work", "color": "#f00", "description": "keep", "echo_url": "https://e", "role": "owner",
+			})
+			return
+		}
+		json.NewDecoder(r.Body).Decode(&got)
+		json.NewEncoder(w).Encode(map[string]any{"id": 1})
+	})
+
+	cmd := newUpdateCmd()
+	cmd.SetArgs([]string{"1", "--color", "#0f0", "--echo-url", "", "--json"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("update failed: %v", err)
+	}
+	if got["name"] != "Work" || got["description"] != "keep" || got["color"] != "#0f0" || got["echo_url"] != "" {
+		t.Errorf("body = %v", got)
+	}
+	if _, leaked := got["role"]; leaked {
+		t.Error("read-only fields must not be sent back")
+	}
+}
+
+func TestCalendarsCreateSendsEveryField(t *testing.T) {
+	var got map[string]any
+	setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		json.NewDecoder(r.Body).Decode(&got)
+		json.NewEncoder(w).Encode(map[string]any{"id": 3, "name": "N"})
+	})
+
+	cmd := newCreateCmd()
+	cmd.SetArgs([]string{"N", "--color", "#00f", "--description", "d", "--echo-url", "https://e", "--space", "4", "--json"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("create failed: %v", err)
+	}
+	if got["name"] != "N" || got["description"] != "d" || got["echo_url"] != "https://e" || got["space_id"] != float64(4) {
+		t.Errorf("body = %v", got)
+	}
+	if err := newCreateCmd().Execute(); err == nil {
+		t.Error("a calendar with no name must be refused")
 	}
 }

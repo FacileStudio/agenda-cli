@@ -1,8 +1,6 @@
 package calendars
 
 import (
-	"fmt"
-
 	"github.com/FacileStudio/agenda-cli/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -45,10 +43,6 @@ func runShow(id string, jsonOutput bool) error {
 		return ui.PrintJSON(calendar)
 	}
 
-	ui.PrintKeyValue("ID", fmt.Sprintf("%v", calendar["id"]))
-	ui.PrintKeyValue("Name", fmt.Sprintf("%v", calendar["name"]))
-	ui.PrintKeyValue("Color", fmt.Sprintf("%v", calendar["color"]))
-	ui.PrintKeyValue("Owner", fmt.Sprintf("%v", calendar["owner_id"]))
-
+	printCalendar(calendar)
 	return nil
 }

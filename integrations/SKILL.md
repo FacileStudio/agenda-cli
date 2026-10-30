@@ -38,7 +38,7 @@ agenda token revoke [--json]             Revoke personal API token (alias: delet
 agenda calendars list [--json]                                       List all calendars
 agenda calendars create <name> [--color <hex>] [--json]              Create a calendar
 agenda calendars show <id> [--json]                                  Show calendar details
-agenda calendars update <id> [--name <name>] [--color <hex>] [--json] Update calendar
+agenda calendars update <id> [--name] [--color] [--description] [--echo-url] [--json]  Update calendar (unpassed fields kept)
 agenda calendars delete <id> [-f] [--json]                           Delete calendar
 agenda calendars members <id> [--json]                               List calendar members
 agenda calendars share <id> <email> <role> [--json]                  Share calendar
@@ -47,10 +47,12 @@ agenda calendars unshare <id> <email-or-id> [--json]                 Remove memb
 
 ### Events
 ```
-agenda events list --calendar <id> [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--search <q>] [--json]
+agenda events list --calendar <id> [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--search <q>] [--timezone <iana>] [--json]
 agenda events show <id> [--ics] [--json]
-agenda events create --calendar <id> --title <title> --start <datetime> --end <datetime> [--all-day] [--location <loc>] [--description <desc>] [--json]
-agenda events update <id> [--title <title>] [--start <datetime>] [--end <datetime>] [--calendar <id>] [--all-day] [--location <loc>] [--description <desc>] [--json]
+agenda events create --calendar <id> --title <t> --start <dt> --end <dt> [--all-day] [--location <l>] [--description <d>]
+    [--recurrence "FREQ=WEEKLY;BYDAY=MO"] [--status confirmed|tentative|cancelled]
+    [--conference-url <url>] [--conference-provider <name>] [--timezone Europe/Paris] [--json]
+agenda events update <id> [any create flag] [--calendar <id>] [--all-day=false] [--location ""] [--json]
 agenda events delete <id> [-f] [--json]
 ```
 
@@ -66,4 +68,7 @@ agenda caldav test                         Test CalDAV connectivity
 - Configure server URL first with `agenda config server <url>` or `AGENDA_SERVER_URL`
 - In CI and automated contexts, set `AGENDA_TOKEN` and `AGENDA_SERVER_URL`
 - Use `--json` for machine-readable JSON output without ANSI styling
+- `events update` and `calendars update` keep unpassed fields; an empty value clears a text field
+- Naive times (`2026-09-07 09:00`) are read in `--timezone`, UTC when omitted; pass `--timezone` with `--recurrence`
+- The server has no attendees, reminders or event color: do not look for flags for them
 - Run `agenda <cmd> -h` for exact syntax when unsure

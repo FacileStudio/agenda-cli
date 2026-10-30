@@ -13,6 +13,7 @@ type listFilter struct {
 	from       string
 	to         string
 	search     string
+	timezone   string
 	jsonOutput bool
 }
 
@@ -31,7 +32,8 @@ func newListCmd() *cobra.Command {
 	cmd.Flags().StringVar(&filter.calendarID, "calendar", "", "Calendar ID")
 	cmd.Flags().StringVar(&filter.from, "from", "", "Start date (YYYY-MM-DD)")
 	cmd.Flags().StringVar(&filter.to, "to", "", "End date (YYYY-MM-DD)")
-	cmd.Flags().StringVar(&filter.search, "search", "", "Search text in title/description")
+	cmd.Flags().StringVar(&filter.search, "search", "", "Keep events whose title, description or location contain this text")
+	cmd.Flags().StringVar(&filter.timezone, "timezone", "", "IANA zone used to expand recurring events")
 	cmd.Flags().BoolVar(&filter.jsonOutput, "json", false, "Output in JSON format")
 
 	cmd.MarkFlagRequired("calendar")
@@ -49,7 +51,10 @@ func runList(filter listFilter) error {
 		return err
 	}
 
-	params := buildQueryParams(filter.from, filter.to, filter.search)
+	if _, err := loadZone(filter.timezone); err != nil {
+		return err
+	}
+	params := buildQueryParams(filter.from, filter.to, filter.timezone)
 	resp, err := api.GetWithQuery("/calendars/"+filter.calendarID+"/events", params)
 	if err != nil {
 		return err
@@ -59,6 +64,8 @@ func runList(filter listFilter) error {
 	if err := api.DecodeJSON(resp, &events); err != nil {
 		return err
 	}
+
+	events = filterEvents(events, filter.search)
 
 	if filter.jsonOutput {
 		if events == nil {
@@ -71,18 +78,7 @@ func runList(filter listFilter) error {
 	return nil
 }
 
-func printEvents(events []map[string]any) {
-	ui.PrintSuccess(fmt.Sprintf("Found %d events", len(events)))
-	for _, event := range events {
-		ui.PrintKeyValue("ID", fmt.Sprintf("%v", event["id"]))
-		ui.PrintKeyValue("Title", fmt.Sprintf("%v", event["title"]))
-		ui.PrintKeyValue("Start", fmt.Sprintf("%v", event["start"]))
-		ui.PrintKeyValue("End", fmt.Sprintf("%v", event["end"]))
-		fmt.Println()
-	}
-}
-
-func buildQueryParams(from, to, search string) map[string]string {
+func buildQueryParams(from, to, timezone string) map[string]string {
 	params := make(map[string]string)
 	if from != "" {
 		if _, err := time.Parse(time.RFC3339, from); err != nil {
@@ -98,8 +94,21 @@ func buildQueryParams(from, to, search string) map[string]string {
 			params["to"] = to
 		}
 	}
-	if search != "" {
-		params["search"] = search
+	if timezone != "" {
+		params["tz"] = timezone
 	}
 	return params
+}
+
+func filterEvents(events []map[string]any, search string) []map[string]any {
+	if search == "" {
+		return events
+	}
+	kept := make([]map[string]any, 0, len(events))
+	for _, event := range events {
+		if matchesSearch(event, search) {
+			kept = append(kept, event)
+		}
+	}
+	return kept
 }

@@ -3,50 +3,54 @@ package calendars
 import (
 	"fmt"
 
+	"github.com/FacileStudio/agenda-cli/internal/client"
 	"github.com/FacileStudio/agenda-cli/internal/ui"
 	"github.com/spf13/cobra"
 )
 
+var carriedFields = []string{"name", "color", "description", "echo_url"}
+
 func newUpdateCmd() *cobra.Command {
 	var (
-		name       string
-		color      string
+		fields     calendarFields
 		jsonOutput bool
 	)
 
 	cmd := &cobra.Command{
 		Use:   "update <id>",
 		Short: "Update a calendar",
-		Long:  "Update a calendar's name or color.",
-		Args:  cobra.ExactArgs(1),
+		Long: "Update a calendar. Fields you do not pass keep their stored value; " +
+			"pass an empty string to clear color, description or echo URL.",
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runUpdate(args[0], name, color, jsonOutput)
+			return runUpdate(cmd, args[0], &fields, jsonOutput)
 		},
 	}
 
-	cmd.Flags().StringVar(&name, "name", "", "New calendar name")
-	cmd.Flags().StringVar(&color, "color", "", "New calendar color")
+	fields.bind(cmd)
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Output in JSON format")
 
 	return cmd
 }
 
-func runUpdate(id, name, color string, jsonOutput bool) error {
+func runUpdate(cmd *cobra.Command, id string, fields *calendarFields, jsonOutput bool) error {
+	override := map[string]any{}
+	fields.overlay(cmd, override)
+	if len(override) == 0 {
+		return fmt.Errorf("nothing to update; use --name, --color, --description or --echo-url")
+	}
+
 	api, err := loadAPI()
 	if err != nil {
 		return err
 	}
 
-	body := make(map[string]any)
-	if name != "" {
-		body["name"] = name
+	body, err := currentCalendar(api, id)
+	if err != nil {
+		return err
 	}
-	if color != "" {
-		body["color"] = color
-	}
-
-	if len(body) == 0 {
-		return fmt.Errorf("nothing to update; use --name or --color")
+	for key, value := range override {
+		body[key] = value
 	}
 
 	resp, err := api.Put("/calendars/"+id, body)
@@ -64,9 +68,24 @@ func runUpdate(id, name, color string, jsonOutput bool) error {
 	}
 
 	ui.PrintSuccess("Calendar updated")
-	ui.PrintKeyValue("ID", fmt.Sprintf("%v", calendar["id"]))
-	ui.PrintKeyValue("Name", fmt.Sprintf("%v", calendar["name"]))
-	ui.PrintKeyValue("Color", fmt.Sprintf("%v", calendar["color"]))
-
+	printCalendar(calendar)
 	return nil
+}
+
+func currentCalendar(api *client.Client, id string) (map[string]any, error) {
+	resp, err := api.Get("/calendars/" + id)
+	if err != nil {
+		return nil, err
+	}
+	var existing map[string]any
+	if err := api.DecodeJSON(resp, &existing); err != nil {
+		return nil, err
+	}
+	body := make(map[string]any, len(carriedFields))
+	for _, key := range carriedFields {
+		if value, ok := existing[key]; ok {
+			body[key] = value
+		}
+	}
+	return body, nil
 }

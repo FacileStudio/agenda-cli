@@ -42,7 +42,9 @@ func runUnshare(calendarID, memberTarget string, jsonOutput bool) error {
 	if err != nil {
 		return err
 	}
-	resp.Body.Close()
+	if err := api.ExpectOK(resp); err != nil {
+		return err
+	}
 
 	if jsonOutput {
 		return ui.PrintJSON(map[string]bool{"deleted": true})
