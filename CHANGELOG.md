@@ -6,6 +6,23 @@ All notable changes to agenda-cli are documented here. Format follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-30
+
+### Added
+
+- `events create` and `events update` take `--recurrence`, `--status`, `--conference-url`, `--conference-provider` and `--timezone`. Naive `--start` and `--end` are read in `--timezone`.
+- `calendars create` and `calendars update` take `--description` and `--echo-url`; `create` takes `--space` and `--name`.
+- `events list --timezone` expands recurring events in that zone.
+- `events show` prints recurrence, status and conference fields; `--ics` carries RRULE, STATUS and URL.
+
+### Fixed
+
+- `events update` no longer drops recurrence, status or conference fields, and `--all-day=false` and an empty `--location ""` now clear the stored value.
+- `calendars update` fetches the calendar first, so passing only `--color` no longer fails or wipes the description and echo URL.
+- `events list --search` filters in the CLI; the server ignored it.
+- `events show`, `events list` and `--ics` read `start_at`, `end_at` and `is_all_day`, so they no longer print empty times.
+- `events delete`, `calendars delete` and `calendars unshare` report a server error instead of success.
+
 ## [0.3.2] - 2026-10-27
 
 ### Added
