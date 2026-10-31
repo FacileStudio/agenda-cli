@@ -79,7 +79,7 @@ func renderICS(event map[string]any) (string, error) {
 		CreatedAt:   parseTime(event["created_at"]),
 		UpdatedAt:   parseTime(event["updated_at"]),
 	}
-	return caldav.RenderICS(calEvent)
+	return caldav.RenderICSWith(calEvent, icsExtras(event))
 }
 
 func parseTime(v any) time.Time {

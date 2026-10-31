@@ -52,9 +52,19 @@ agenda events show <id> [--ics] [--json]
 agenda events create --calendar <id> --title <t> --start <dt> --end <dt> [--all-day] [--location <l>] [--description <d>]
     [--recurrence "FREQ=WEEKLY;BYDAY=MO"] [--status confirmed|tentative|cancelled]
     [--conference-url <url>] [--conference-provider <name>] [--timezone Europe/Paris] [--json]
+    [--attendee "EMAIL[,name=N][,role=required|optional][,response=needs-action|accepted|declined|tentative]"]...
+    [--reminder MINUTES[:display|audio|email]]... [--color "#RRGGBB"]
 agenda events update <id> [any create flag] [--calendar <id>] [--all-day=false] [--location ""] [--json]
+    [--clear-attendees] [--clear-reminders] [--color ""]
+agenda events update <id> --occurrence YYYY-MM-DD [--title --description --location --start --end --status confirmed|tentative]
+agenda events cancel-occurrence <id> --date YYYY-MM-DD [--json]
+agenda events restore-occurrence <id> --date YYYY-MM-DD [--json]
 agenda events delete <id> [-f] [--json]
 ```
+
+`events show <id> --json` returns `timezone`, `color`, `attendees` (with `response`), `reminders` and
+`exceptions` (cancelled or overridden occurrences). `events list --from --to --json` expands a recurring
+event into one entry per occurrence, each with `occurrence_start`; cancelled occurrences are absent.
 
 ### CalDAV
 ```
@@ -70,5 +80,8 @@ agenda caldav test                         Test CalDAV connectivity
 - Use `--json` for machine-readable JSON output without ANSI styling
 - `events update` and `calendars update` keep unpassed fields; an empty value clears a text field
 - Naive times (`2026-09-07 09:00`) are read in `--timezone`, UTC when omitted; pass `--timezone` with `--recurrence`
-- The server has no attendees, reminders or event color: do not look for flags for them
+- `--attendee` and `--reminder` replace the whole stored list: read it with `events show --json`, then pass the full list. `--clear-attendees` and `--clear-reminders` empty it
+- Agenda records attendees and their response; it sends no invitation mail
+- `events update` keeps the stored timezone; naive times on an update are read in it unless `--timezone` is given
+- `--occurrence` and `--date` take the day in the event's timezone (`YYYY-MM-DD`), or an RFC 3339 start for a series with several occurrences a day. Changing the series start, rule or zone discards its occurrence exceptions
 - Run `agenda <cmd> -h` for exact syntax when unsure

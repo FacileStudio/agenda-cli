@@ -18,3 +18,9 @@ func NewUpdateCmd() *cobra.Command { return newUpdateCmd() }
 
 // NewDeleteCmd returns the events delete subcommand.
 func NewDeleteCmd() *cobra.Command { return newDeleteCmd() }
+
+// NewCancelOccurrenceCmd returns the events cancel-occurrence subcommand.
+func NewCancelOccurrenceCmd() *cobra.Command { return newCancelOccurrenceCmd() }
+
+// NewRestoreOccurrenceCmd returns the events restore-occurrence subcommand.
+func NewRestoreOccurrenceCmd() *cobra.Command { return newRestoreOccurrenceCmd() }

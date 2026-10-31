@@ -48,6 +48,7 @@ func printEvent(event map[string]any) {
 	for _, row := range rows {
 		ui.PrintKeyValue(row[0], row[1])
 	}
+	printExtras(event)
 }
 
 func printEvents(events []map[string]any) {
@@ -59,6 +60,9 @@ func printEvents(events []map[string]any) {
 		ui.PrintKeyValue("End", text(event["end_at"]))
 		if rule := text(event["recurrence_rule"]); rule != "" {
 			ui.PrintKeyValue("Recurrence", rule)
+		}
+		if occ := text(event["occurrence_start"]); occ != "" {
+			ui.PrintKeyValue("Occurrence", occ)
 		}
 		fmt.Println()
 	}

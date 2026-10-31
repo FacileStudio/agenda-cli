@@ -23,6 +23,7 @@ type eventFields struct {
 	conferenceProvider string
 	timezone           string
 	allDay             bool
+	extras             eventExtras
 }
 
 type textField struct {
@@ -44,6 +45,7 @@ func (f *eventFields) bind(cmd *cobra.Command) {
 	flags.StringVar(&f.conferenceURL, "conference-url", "", "Video call or meeting link")
 	flags.StringVar(&f.conferenceProvider, "conference-provider", "", "Label for the link, such as Zoom")
 	flags.StringVar(&f.timezone, "timezone", "", "IANA zone such as Europe/Paris: reads naive --start/--end and anchors a recurrence")
+	f.extras.bind(cmd)
 }
 
 func (f *eventFields) textFields() []textField {
@@ -76,6 +78,9 @@ func (f *eventFields) overlay(cmd *cobra.Command, body map[string]any) error {
 	if changed("all-day") {
 		body["is_all_day"] = f.allDay
 	}
+	if err := f.extras.overlay(cmd, body); err != nil {
+		return err
+	}
 	return f.overlayTimes(cmd, body, loc)
 }
 
@@ -94,6 +99,15 @@ func (f *eventFields) overlayTimes(cmd *cobra.Command, body map[string]any, loc 
 		body[t.key] = parsed
 	}
 	return nil
+}
+
+func (f *eventFields) adoptStoredZone(cmd *cobra.Command, existing map[string]any) {
+	if cmd.Flags().Changed("timezone") {
+		return
+	}
+	if stored, ok := existing["timezone"].(string); ok {
+		f.timezone = stored
+	}
 }
 
 func loadZone(name string) (*time.Location, error) {

@@ -27,6 +27,12 @@ type Event struct {
 
 // RenderICS serializes an event into an iCalendar (RFC 5545) payload.
 func RenderICS(event *Event) (string, error) {
+	return RenderICSWith(event, nil)
+}
+
+// RenderICSWith is RenderICS plus the attendees, reminders, color and
+// excluded occurrences in x. A nil x adds nothing.
+func RenderICSWith(event *Event, x *Extras) (string, error) {
 	cal := ical.NewCalendar()
 	cal.Props.SetText(ical.PropVersion, "2.0")
 	cal.Props.SetText(ical.PropProductID, "-//Facile Studio//Agenda CLI//EN")
@@ -44,6 +50,7 @@ func RenderICS(event *Event) (string, error) {
 
 	setExtras(comp, event)
 	setBounds(comp, event)
+	x.apply(comp, event.AllDay)
 
 	comp.Props.SetDateTime(ical.PropDateTimeStamp, time.Now())
 	comp.Props.SetDateTime(ical.PropCreated, event.CreatedAt)

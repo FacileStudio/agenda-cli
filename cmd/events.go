@@ -10,7 +10,7 @@ func NewEventsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "events",
 		Short: "Manage events",
-		Long:  "Create, list, show, update, and delete events.",
+		Long:  "Create, list, show, update, and delete events, and cancel or change single occurrences of a recurring event.",
 	}
 
 	cmd.AddCommand(events.NewListCmd())
@@ -18,6 +18,8 @@ func NewEventsCmd() *cobra.Command {
 	cmd.AddCommand(events.NewCreateCmd())
 	cmd.AddCommand(events.NewUpdateCmd())
 	cmd.AddCommand(events.NewDeleteCmd())
+	cmd.AddCommand(events.NewCancelOccurrenceCmd())
+	cmd.AddCommand(events.NewRestoreOccurrenceCmd())
 
 	return cmd
 }

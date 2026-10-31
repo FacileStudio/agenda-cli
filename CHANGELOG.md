@@ -6,6 +6,21 @@ All notable changes to agenda-cli are documented here. Format follows
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-31
+
+Needs an Agenda server with attendee, reminder, color and occurrence support.
+
+### Added
+
+- `events create` and `events update` take `--attendee` (repeatable, `EMAIL[,name=,role=,response=]`), `--clear-attendees`, `--reminder` (repeatable, `MINUTES[:display|audio|email]`), `--clear-reminders` and `--color`.
+- `events show` prints the timezone, color, attendees with their response, reminders and occurrence exceptions; `--ics` carries ATTENDEE, VALARM, COLOR and EXDATE.
+- `events cancel-occurrence <id> --date`, `events restore-occurrence <id> --date` and `events update <id> --occurrence <date>` act on a single occurrence of a recurring event.
+- `events list` prints the `occurrence_start` of each expanded occurrence.
+
+### Fixed
+
+- `events update` keeps the stored timezone, so a recurring series is no longer re-anchored to UTC, and reads naive `--start` and `--end` in that zone.
+
 ## [0.4.0] - 2026-10-30
 
 ### Added
