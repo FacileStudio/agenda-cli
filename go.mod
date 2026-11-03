@@ -3,7 +3,7 @@ module github.com/FacileStudio/agenda-cli
 go 1.26.4
 
 require (
-	github.com/FacileStudio/porte v0.5.2
+	github.com/FacileStudio/porte v0.9.0
 	github.com/emersion/go-ical v0.0.0-20250609112844-439c63cef608
 	github.com/fatih/color v1.19.0
 	github.com/mattn/go-isatty v0.0.24

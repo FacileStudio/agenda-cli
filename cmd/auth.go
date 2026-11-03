@@ -30,29 +30,34 @@ func NewAuthCmd() *cobra.Command {
 
 // newLoginCmd returns the login subcommand.
 func newLoginCmd() *cobra.Command {
-	var noBrowser bool
+	var noBrowser, useListener bool
 
 	cmd := &cobra.Command{
 		Use:   "login [url]",
-		Short: "Sign in through your browser",
-		Long: `Sign in through your browser.
+		Short: "Sign in by approving a link in your browser",
+		Long: `Sign in by approving a link in your browser.
 
-The browser opens on the Agenda server and, when you already have a session open
-with another Facile tool, completes the login without a prompt. The server is
-the argument, then AGENDA_SERVER_URL, then the stored value, then
+The login prints an approval link and opens it when it can. Approve the sign-in
+there, on any device, and the login finishes on its own. Nothing is typed or
+pasted and nothing listens on a port, so it works over SSH.
+
+--listener uses the older flow instead: the browser redirects back to a port on
+this machine. It is also the fallback when the server has no device login yet.
+The server is the argument, then AGENDA_SERVER_URL, then the stored value, then
 ` + client.DefaultServerURL + `.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runLogin(args, noBrowser)
+			return runLogin(args, noBrowser, useListener)
 		},
 	}
 
 	cmd.Flags().BoolVar(&noBrowser, "no-browser", false, "Print the sign-in URL instead of opening a browser")
+	cmd.Flags().BoolVar(&useListener, "listener", false, "Use the loopback listener flow instead of the device login")
 
 	return cmd
 }
 
-func runLogin(args []string, noBrowser bool) error {
+func runLogin(args []string, noBrowser, useListener bool) error {
 	configPath := client.DefaultConfigPath()
 	config, err := client.Load()
 	if err != nil {
@@ -62,7 +67,7 @@ func runLogin(args []string, noBrowser bool) error {
 		config.ServerURL = client.NormalizeLoginURL(args[0])
 	}
 
-	if err := loginWithOIDC(config, noBrowser); err != nil {
+	if err := loginWithOIDC(config, noBrowser, useListener); err != nil {
 		return err
 	}
 
@@ -74,7 +79,7 @@ func runLogin(args []string, noBrowser bool) error {
 	return nil
 }
 
-func loginWithOIDC(config *client.Config, noBrowser bool) error {
+func loginWithOIDC(config *client.Config, noBrowser, useListener bool) error {
 	api := client.NewClient(config)
 
 	authConfig, err := api.AuthConfig()
@@ -85,17 +90,12 @@ func loginWithOIDC(config *client.Config, noBrowser bool) error {
 		return fmt.Errorf("server does not support OIDC login")
 	}
 
-	authCode, err := obtainAuthCode(config.ServerURL, noBrowser)
+	token, err := obtainToken(api, config.ServerURL, noBrowser, useListener)
 	if err != nil {
 		return err
 	}
 
-	token, err := exchangeToken(api, authCode)
-	if err != nil {
-		return err
-	}
-
-	config.Token = *token
+	config.Token = token
 	return populateUser(api, config)
 }
 

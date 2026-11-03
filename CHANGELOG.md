@@ -6,6 +6,15 @@ All notable changes to agenda-cli are documented here. Format follows
 
 ## [Unreleased]
 
+### Changed
+
+- `agenda login` uses the device login from porte v0.9.0 by default. It prints an approval link, tries to open it, and finishes once the sign-in is approved. Nothing is typed or pasted and nothing listens on a port, so it works over SSH.
+- A server without the device exchange falls back to the loopback listener with a one-line notice. An account that never signed in through the browser is told to do so once.
+
+### Added
+
+- `agenda login --listener` forces the older loopback listener flow.
+
 ## [0.6.0] - 2026-11-03
 
 ### Changed

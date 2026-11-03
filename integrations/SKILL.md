@@ -21,7 +21,7 @@ Triggers: "calendar", "event", "meeting", "caldav", "agenda", "schedule"
 ### Setup and auth
 ```
 agenda config server <url>     Set the Agenda server URL
-agenda login [--no-browser]    Authenticate via browser OIDC
+agenda login [--no-browser] [--listener]  Authenticate via an approval link (works over SSH)
 agenda logout                  Clear stored credentials
 agenda whoami [--json]         Show authenticated user profile
 ```
