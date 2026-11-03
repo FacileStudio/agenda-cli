@@ -1,12 +1,15 @@
 package cmd
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"time"
+	"os"
 
 	"github.com/FacileStudio/agenda-cli/internal/client"
-	"github.com/FacileStudio/agenda-cli/internal/loopback"
 	"github.com/FacileStudio/agenda-cli/internal/ui"
+	"github.com/FacileStudio/porte/loopback"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
 
@@ -30,38 +33,45 @@ func newLoginCmd() *cobra.Command {
 	var noBrowser bool
 
 	cmd := &cobra.Command{
-		Use:   "login",
-		Short: "Authenticate with the Agenda server",
-		Long:  "Login using browser-based OIDC flow.",
+		Use:   "login [url]",
+		Short: "Sign in through your browser",
+		Long: `Sign in through your browser.
+
+The browser opens on the Agenda server and, when you already have a session open
+with another Facile tool, completes the login without a prompt. The server is
+the argument, then AGENDA_SERVER_URL, then the stored value, then
+` + client.DefaultServerURL + `.`,
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			configPath := client.DefaultConfigPath()
-			config, err := client.Load()
-			if err != nil {
-				return fmt.Errorf("load config: %w", err)
-			}
-
-			if config.ServerURL == "" {
-				return fmt.Errorf("no server URL configured; run `agenda config server <url>` or set AGENDA_SERVER_URL")
-			}
-
-			ui.PrintInfo(fmt.Sprintf("Logging in to %s", config.ServerURL))
-
-			if err := loginWithOIDC(config, noBrowser); err != nil {
-				return err
-			}
-
-			if err := config.Save(configPath); err != nil {
-				return fmt.Errorf("save config: %w", err)
-			}
-
-			ui.PrintSuccess("Logged in successfully")
-			return nil
+			return runLogin(args, noBrowser)
 		},
 	}
 
-	cmd.Flags().BoolVar(&noBrowser, "no-browser", false, "Do not open browser automatically")
+	cmd.Flags().BoolVar(&noBrowser, "no-browser", false, "Print the sign-in URL instead of opening a browser")
 
 	return cmd
+}
+
+func runLogin(args []string, noBrowser bool) error {
+	configPath := client.DefaultConfigPath()
+	config, err := client.Load()
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+	if len(args) == 1 {
+		config.ServerURL = client.NormalizeLoginURL(args[0])
+	}
+
+	if err := loginWithOIDC(config, noBrowser); err != nil {
+		return err
+	}
+
+	if err := config.Save(configPath); err != nil {
+		return fmt.Errorf("save config: %w", err)
+	}
+
+	ui.PrintSuccess(fmt.Sprintf("Logged in to %s as %s", config.ServerURL, config.Email))
+	return nil
 }
 
 func loginWithOIDC(config *client.Config, noBrowser bool) error {
@@ -90,24 +100,30 @@ func loginWithOIDC(config *client.Config, noBrowser bool) error {
 }
 
 func obtainAuthCode(serverURL string, noBrowser bool) (string, error) {
-	listener, port, err := loopback.Listen()
+	listener, err := loopback.Listen()
 	if err != nil {
-		return "", fmt.Errorf("failed to start listener: %w", err)
+		return "", fmt.Errorf("cannot open a loopback port to receive the login: %w", err)
 	}
 	defer listener.Close()
+	listener.AppName = "Agenda"
 
-	state := loopback.RandomState()
-	authURL := fmt.Sprintf("%s/auth/oidc?flow=cli&port=%d&cli_state=%s", serverURL, port, state)
-
-	ui.PrintInfo("Opening browser for authentication...")
-	if !noBrowser && !loopback.OpenBrowser(authURL) {
-		ui.PrintWarn("Could not open browser automatically")
-	}
-	ui.PrintInfo(fmt.Sprintf("If browser did not open, visit: %s", authURL))
-	ui.PrintInfo("Waiting for authentication...")
-
-	authCode, err := loopback.WaitForCode(listener, state, 5*time.Minute)
+	state, err := loopback.RandomState()
 	if err != nil {
+		return "", err
+	}
+	authURL := listener.LoginURL(serverURL, "", state)
+
+	if noBrowser || !isatty.IsTerminal(os.Stdout.Fd()) || !loopback.OpenBrowser(authURL) {
+		ui.PrintInfo(fmt.Sprintf("Open this URL to sign in: %s", authURL))
+	} else {
+		ui.PrintInfo("Waiting for the browser to finish signing you in...")
+	}
+
+	authCode, err := listener.WaitForCode(context.Background(), state)
+	if err != nil {
+		if errors.Is(err, loopback.ErrTimeout) {
+			return "", fmt.Errorf("timed out waiting for the browser, run `agenda login` again")
+		}
 		return "", fmt.Errorf("authentication failed: %w", err)
 	}
 	return authCode, nil

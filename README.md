@@ -15,7 +15,6 @@ curl -fsSL https://github.com/FacileStudio/agenda-cli/releases/latest/download/i
 ## Usage
 
 ```bash
-agenda config server https://agenda.example.com
 agenda login
 agenda whoami --json
 agenda calendars list --json
@@ -37,7 +36,7 @@ agenda caldav url
 
 ## Commands
 
-- `login`, `logout`, `whoami [--json]`
+- `login [url]` opens your browser and signs you in with no code to paste (the server defaults to https://agenda.facile.studio; `--no-browser` prints the URL), `logout`, `whoami [--json]`
 - `auth login`, `auth logout`, `auth whoami`
 - `token status [--json]`, `token create [-n <name>] [--json]`, `token revoke [--json]` (alias `delete`)
 - `calendars list [--json]`, `create [name] [--name --color --description --echo-url --space]`, `show <id> [--json]`, `update <id> [--name --color --description --echo-url]`, `delete`, `share`, `members`, `unshare`

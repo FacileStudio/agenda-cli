@@ -6,6 +6,12 @@ All notable changes to agenda-cli are documented here. Format follows
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-03
+
+### Changed
+
+- `agenda login [url]` signs in through the browser with the shared porte loopback listener: one line while waiting, one on success, nothing to copy. The server is the argument, `AGENDA_SERVER_URL`, the stored value, then `https://agenda.facile.studio`.
+
 ## [0.5.0] - 2026-10-31
 
 Needs an Agenda server with attendee, reminder, color and occurrence support.

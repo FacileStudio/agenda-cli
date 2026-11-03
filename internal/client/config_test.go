@@ -40,3 +40,17 @@ func TestConfigRequireAuthMissing(t *testing.T) {
 		t.Error("expected error for missing token, got nil")
 	}
 }
+
+func TestNormalizeLoginURL(t *testing.T) {
+	cases := map[string]string{
+		"https://agenda.facile.studio":      DefaultServerURL,
+		"https://agenda.facile.studio/api/": DefaultServerURL,
+		"http://localhost:8080":             "http://localhost:8080/api",
+		"https://example.org/custom":        "https://example.org/custom",
+	}
+	for in, want := range cases {
+		if got := NormalizeLoginURL(in); got != want {
+			t.Errorf("NormalizeLoginURL(%q) = %q, want %q", in, got, want)
+		}
+	}
+}

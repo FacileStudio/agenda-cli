@@ -1,6 +1,7 @@
 package client
 
 import (
+	"net/url"
 	"os"
 	"strings"
 )
@@ -19,6 +20,15 @@ func NormalizeServerURL(raw string) string {
 		return DefaultServerURL
 	}
 	return raw
+}
+
+// NormalizeLoginURL turns a server address typed on the command line into an API URL, adding /api to a bare host.
+func NormalizeLoginURL(raw string) string {
+	raw = strings.TrimRight(strings.TrimSpace(raw), "/")
+	if u, err := url.Parse(raw); err == nil && u.Host != "" && u.Path == "" {
+		raw += "/api"
+	}
+	return NormalizeServerURL(raw)
 }
 
 // Load loads configuration from disk and environment variables.
