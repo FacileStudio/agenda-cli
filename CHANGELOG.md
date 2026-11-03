@@ -6,6 +6,8 @@ All notable changes to agenda-cli are documented here. Format follows
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-03
+
 ### Changed
 
 - `agenda login` uses the device login from porte v0.9.0 by default. It prints an approval link, tries to open it, and finishes once the sign-in is approved. Nothing is typed or pasted and nothing listens on a port, so it works over SSH.
