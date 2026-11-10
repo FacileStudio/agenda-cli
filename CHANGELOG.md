@@ -6,6 +6,10 @@ All notable changes to agenda-cli are documented here. Format follows
 
 ## [Unreleased]
 
+### Added
+
+- agenda-cli is released under the [MIT License](LICENSE).
+
 ## [0.7.0] - 2026-11-03
 
 ### Changed

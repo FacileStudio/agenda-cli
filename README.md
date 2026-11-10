@@ -70,4 +70,4 @@ Environment variables: `AGENDA_SERVER_URL`, `AGENDA_TOKEN`
 
 ## License
 
-MIT
+agenda-cli is released under the [MIT License](LICENSE).
