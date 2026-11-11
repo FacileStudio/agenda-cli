@@ -6,6 +6,16 @@ All notable changes to agenda-cli are documented here. Format follows
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-11-11
+
+### Security
+
+- build: Go 1.26.11 (`go` directive). It fixes GO-2026-6848 to GO-2026-6859 in the standard library and toolchain, which douane reported as unscored gaps and which failed the gate.
+
+### Changed
+
+- style(cmd): gofmt, `maps.Copy` and a `strings.Builder`, the findings that failed `filet gate` before this release.
+
 ### Added
 
 - agenda-cli is released under the [MIT License](LICENSE).
