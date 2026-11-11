@@ -2,6 +2,7 @@ package calendars
 
 import (
 	"fmt"
+	"maps"
 
 	"github.com/FacileStudio/agenda-cli/internal/client"
 	"github.com/FacileStudio/agenda-cli/internal/ui"
@@ -49,9 +50,7 @@ func runUpdate(cmd *cobra.Command, id string, fields *calendarFields, jsonOutput
 	if err != nil {
 		return err
 	}
-	for key, value := range override {
-		body[key] = value
-	}
+	maps.Copy(body, override)
 
 	resp, err := api.Put("/calendars/"+id, body)
 	if err != nil {

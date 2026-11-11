@@ -8,4 +8,3 @@ import (
 func loadAPI() (*client.Client, error) {
 	return client.LoadAPI()
 }
-

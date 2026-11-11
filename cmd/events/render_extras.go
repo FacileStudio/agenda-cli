@@ -3,6 +3,7 @@ package events
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/FacileStudio/agenda-cli/internal/caldav"
 	"github.com/FacileStudio/agenda-cli/internal/ui"
@@ -50,13 +51,18 @@ func formatException(x map[string]any) string {
 	if x["cancelled"] == true {
 		return date + " cancelled"
 	}
-	out := date + " overridden"
+	var out strings.Builder
+	out.WriteString(date)
+	out.WriteString(" overridden")
 	for _, key := range []string{"title", "location", "start_at", "end_at", "status"} {
 		if v := text(x[key]); v != "" {
-			out += " " + key + "=" + v
+			out.WriteString(" ")
+			out.WriteString(key)
+			out.WriteString("=")
+			out.WriteString(v)
 		}
 	}
-	return out
+	return out.String()
 }
 
 func icsExtras(event map[string]any) *caldav.Extras {
