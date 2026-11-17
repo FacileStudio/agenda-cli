@@ -5,8 +5,8 @@ Terminal client for the Facile Agenda calendar server.
 ## Install
 
 ```bash
-# via facile installer
-facile install agenda
+# via kit, the Facile package manager
+kit add agenda
 
 # or via GoReleaser release
 curl -fsSL https://github.com/FacileStudio/agenda-cli/releases/latest/download/install.sh | sh
